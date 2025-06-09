@@ -1,19 +1,20 @@
 {
-  "name": "n8n-nodes-<...>",
+  "name": "n8n-nodes-oceanbase",
   "version": "0.1.0",
-  "description": "",
+  "description": "OceanBase - n8n integration node",
   "keywords": [
-    "n8n-community-node-package"
+    "n8n-community-node-package",
+    "oceanbase"
   ],
   "license": "MIT",
   "homepage": "",
   "author": {
-    "name": "",
-    "email": ""
+    "name": "xxsc0529",
+    "email": "xxsc0529@163.com"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/<...>/n8n-nodes-<...>.git"
+    "url": "https://github.com/xxsc0529/n8n-nodes-oceanbase.git"
   },
   "engines": {
     "node": ">=20.15"
@@ -50,6 +51,8 @@
     "typescript": "^5.8.2"
   },
   "peerDependencies": {
-    "n8n-workflow": "*"
+    "n8n-workflow": "*",
+    "mysql2": "3.14.1",
+    "n8n-core": "1.14.1"
   }
 }
