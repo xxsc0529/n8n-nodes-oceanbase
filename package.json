@@ -4,7 +4,7 @@
   "description": "OceanBase - n8n integration node",
   "keywords": [
     "n8n-community-node-package",
-    "oceanbase"
+    "OceanBase"
   ],
   "license": "MIT",
   "homepage": "",
@@ -34,12 +34,10 @@
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [
-      "dist/credentials/ExampleCredentialsApi.credentials.js",
-      "dist/credentials/HttpBinApi.credentials.js"
+      "dist/credentials/OceanBaseApi.credentials.ts"
     ],
     "nodes": [
-      "dist/nodes/ExampleNode/ExampleNode.node.js",
-      "dist/nodes/HttpBin/HttpBin.node.js"
+      "dist/nodes/OceanBase/OceanBase.node.ts"
     ]
   },
   "devDependencies": {
@@ -52,7 +50,7 @@
   },
   "peerDependencies": {
     "n8n-workflow": "*",
-    "mysql2": "3.14.1",
-    "n8n-core": "1.14.1"
+    "n8n-core": "*",
+    "mysql2": "3.14.1"
   }
 }
