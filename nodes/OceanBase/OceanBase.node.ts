@@ -19,7 +19,7 @@ import { createConnection, searchTables, getResolvables } from './GenericFunctio
 const versionDescription: INodeTypeDescription = {
 	displayName: 'OceanBase',
 	name: 'oceanBase',
-	icon: 'file:OceanBase.svg',
+	icon: 'file:oceanbase.svg',
 	group: ['input'],
 	version: 1,
 	description: 'Get, add and update data in OceanBase',
