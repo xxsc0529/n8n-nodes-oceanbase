@@ -1,7 +1,5 @@
 import type { ICredentialType, INodeProperties } from 'n8n-workflow';
 
-import { sshTunnelProperties } from './sshTunnel.properties';
-
 export class OceanBaseApi implements ICredentialType {
 	name = 'oceanBaseApi';
 
@@ -99,6 +97,5 @@ export class OceanBaseApi implements ICredentialType {
 			type: 'string',
 			default: '',
 		},
-		...sshTunnelProperties,
-	];
+		];
 }
