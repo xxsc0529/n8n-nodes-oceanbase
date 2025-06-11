@@ -1,4 +1,3 @@
-/* eslint-disable n8n-nodes-base/node-filename-against-convention */
 import type mysql2 from 'mysql2/promise';
 import type {
 	ICredentialDataDecryptedObject,
