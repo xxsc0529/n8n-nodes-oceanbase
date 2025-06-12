@@ -13,7 +13,7 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
 
-import { createConnection, searchTables, getResolvables } from './GenericFunctions';
+import { createConnection, getResolvables, searchTables } from './GenericFunctions';
 
 const versionDescription: INodeTypeDescription = {
 	displayName: 'OceanBase',
