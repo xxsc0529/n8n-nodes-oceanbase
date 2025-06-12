@@ -1,4 +1,4 @@
-import type { ICredentialType, INodeProperties } from 'n8n-workflow';
+import type { ICredentialTestRequest, ICredentialType, INodeProperties } from 'n8n-workflow';
 
 export class OceanBaseApi implements ICredentialType {
 	name = 'oceanBaseApi';
@@ -48,54 +48,6 @@ export class OceanBaseApi implements ICredentialType {
 			default: 10000,
 			description:
 				'The milliseconds before a timeout occurs during the initial connection to the MySQL server',
-		},
-		{
-			displayName: 'SSL',
-			name: 'ssl',
-			type: 'boolean',
-			default: false,
-		},
-		{
-			displayName: 'CA Certificate',
-			name: 'caCertificate',
-			typeOptions: {
-				password: true,
-			},
-			displayOptions: {
-				show: {
-					ssl: [true],
-				},
-			},
-			type: 'string',
-			default: '',
-		},
-		{
-			displayName: 'Client Private Key',
-			name: 'clientPrivateKey',
-			typeOptions: {
-				password: true,
-			},
-			displayOptions: {
-				show: {
-					ssl: [true],
-				},
-			},
-			type: 'string',
-			default: '',
-		},
-		{
-			displayName: 'Client Certificate',
-			name: 'clientCertificate',
-			typeOptions: {
-				password: true,
-			},
-			displayOptions: {
-				show: {
-					ssl: [true],
-				},
-			},
-			type: 'string',
-			default: '',
 		},
 		];
 }

@@ -9,44 +9,31 @@ import type {
 export async function createConnection(
 	credentials: ICredentialDataDecryptedObject,
 ): Promise<mysql2.Connection> {
-	const { ssl, caCertificate, clientCertificate, clientPrivateKey, ...baseCredentials } =
+	const {caCertificate, clientCertificate, clientPrivateKey, ...baseCredentials } =
 		credentials;
-
-	if (ssl) {
-		baseCredentials.ssl = {};
-
-		if (caCertificate) {
-			baseCredentials.ssl.ca = caCertificate;
-		}
-
-		if (clientCertificate || clientPrivateKey) {
-			baseCredentials.ssl.cert = clientCertificate;
-			baseCredentials.ssl.key = clientPrivateKey;
-		}
-	}
-
 	return await mysql2.createConnection(baseCredentials);
 }
 
 /**
  * @TECH_DEBT Explore replacing with handlebars
  */
-export function getResolvables(expression: string) {
+export function getResolvables(expression: string): string[] {
 	if (!expression) return [];
 
-	const resolvables = [];
+	const resolvables: string[] = [];
 	const resolvableRegex = /({{[\s\S]*?}})/g;
+	let match: RegExpExecArray | null;
 
-	let match;
-
-	while ((match = resolvableRegex.exec(expression)) !== null) {
-		if (match[1]) {
+	do {
+		match = resolvableRegex.exec(expression);
+		if (match !== null && match[1]) {
 			resolvables.push(match[1]);
 		}
-	}
+	} while (match !== null);
 
 	return resolvables;
 }
+
 
 export async function searchTables(
 	this: ILoadOptionsFunctions,
