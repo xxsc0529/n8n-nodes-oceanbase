@@ -11,7 +11,7 @@ import type {
 	INodeTypeBaseDescription,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import { NodeConnectionType, NodeOperationError } from 'n8n-workflow';
+import {NodeOperationError } from 'n8n-workflow';
 
 import { createConnection, getResolvables, searchTables } from './GenericFunctions';
 
@@ -25,8 +25,8 @@ const versionDescription: INodeTypeDescription = {
 	defaults: {
 		name: 'OceanBase',
 	},
-	inputs: [NodeConnectionType.Main],
-	outputs: [NodeConnectionType.Main],
+		inputs: ['main'],
+		outputs: ['main'],
 	credentials: [
 		{
 			name: 'oceanBaseApi',
