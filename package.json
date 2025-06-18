@@ -1,6 +1,6 @@
 {
   "name": "n8n-nodes-oceanbase",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "OceanBase - n8n integration node",
   "keywords": [
     "n8n-community-node-package",
