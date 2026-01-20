@@ -9,7 +9,17 @@ import type {
 } from 'n8n-workflow';
 import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
+// eslint-disable-next-line @n8n/community-nodes/no-restricted-imports
 import mysql from 'mysql2/promise';
+
+// Interface for mysql2 Connection with execute method
+interface ConnectionWithExecute {
+	execute(
+		query: string,
+		params?: unknown[],
+	): Promise<[unknown[], unknown[]]>;
+	end(): Promise<void>;
+}
 
 export class OceanBase implements INodeType {
 	description: INodeTypeDescription = {
@@ -224,7 +234,7 @@ export class OceanBase implements INodeType {
 		const credentials = credential as ICredentialDataDecryptedObject;
 
 		try {
-			const connection = await mysql.createConnection({
+			const connection = (await mysql.createConnection({
 				host: credentials.host as string,
 				port: credentials.port as number,
 				database: credentials.database as string,
@@ -232,10 +242,10 @@ export class OceanBase implements INodeType {
 				password: credentials.password as string,
 				ssl: credentials.ssl ? {} : undefined,
 				connectTimeout: credentials.connectionTimeout as number || 10000,
-			});
+			})) as unknown as ConnectionWithExecute;
 
 			// Test connection by executing a simple query
-			await (connection as any).execute('SELECT 1');
+			await connection.execute('SELECT 1');
 			await connection.end();
 
 			return [
@@ -264,7 +274,7 @@ export class OceanBase implements INodeType {
 		const credentials = (await this.getCredentials('oceanBaseApi')) as ICredentialDataDecryptedObject;
 
 		// Create database connection
-		const connection = await mysql.createConnection({
+		const connection = (await mysql.createConnection({
 			host: credentials.host as string,
 			port: credentials.port as number,
 			database: credentials.database as string,
@@ -272,7 +282,7 @@ export class OceanBase implements INodeType {
 			password: credentials.password as string,
 			ssl: credentials.ssl ? {} : undefined,
 			connectTimeout: credentials.connectionTimeout as number || 10000,
-		});
+		})) as unknown as ConnectionWithExecute;
 
 		const returnItems: INodeExecutionData[] = [];
 
@@ -301,7 +311,7 @@ export class OceanBase implements INodeType {
 								}
 							});
 
-							[result] = await (connection as any).execute(query, processedParams);
+							[result] = await connection.execute(query, processedParams);
 							break;
 						}
 
@@ -326,7 +336,7 @@ export class OceanBase implements INodeType {
 							const placeholders = processedValues.map(() => '?').join(',');
 							const query = `INSERT INTO ${table} (${columnList}) VALUES (${placeholders})`;
 
-							[result] = await (connection as any).execute(query, processedValues);
+							[result] = await connection.execute(query, processedValues);
 							break;
 						}
 
@@ -354,7 +364,7 @@ export class OceanBase implements INodeType {
 							const query = `UPDATE ${table} SET ${updateFields.join(', ')} WHERE ${updateKey} = ?`;
 							const queryParams = [...updateValues, updateValue];
 
-							[result] = await (connection as any).execute(query, queryParams);
+							[result] = await connection.execute(query, queryParams);
 							break;
 						}
 
@@ -364,7 +374,7 @@ export class OceanBase implements INodeType {
 							const deleteValue = this.getNodeParameter('deleteValue', itemIndex, '') as string;
 
 							const query = `DELETE FROM ${table} WHERE ${deleteKey} = ?`;
-							[result] = await (connection as any).execute(query, [deleteValue]);
+							[result] = await connection.execute(query, [deleteValue]);
 							break;
 						}
 

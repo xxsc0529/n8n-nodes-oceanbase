@@ -4,6 +4,8 @@ import type {
 	INodeProperties,
 } from 'n8n-workflow';
 
+// Credential is tested by the oceanBase node's credentialTest method
+// eslint-disable-next-line @n8n/community-nodes/credential-test-required
 export class OceanBaseApi implements ICredentialType {
 	name = 'oceanBaseApi';
 
