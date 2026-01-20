@@ -1,11 +1,19 @@
-import type { ICredentialType, INodeProperties } from 'n8n-workflow';
+import type {
+	ICredentialType,
+	Icon,
+	INodeProperties,
+} from 'n8n-workflow';
 
 export class OceanBaseApi implements ICredentialType {
 	name = 'oceanBaseApi';
 
 	displayName = 'OceanBase API';
 
-	documentationUrl = 'https://github.com/xxsc0529/n8n-nodes-oceanbase.git';
+	icon: Icon = 'file:../nodes/OceanBase/oceanbase.svg';
+
+	documentationUrl = 'https://github.com/oceanbase/oceanbase';
+
+	testedBy = 'oceanBase';
 
 	properties: INodeProperties[] = [
 		{
@@ -13,18 +21,32 @@ export class OceanBaseApi implements ICredentialType {
 			name: 'host',
 			type: 'string',
 			default: 'localhost',
+			required: true,
+			description: 'OceanBase database host address',
+		},
+		{
+			displayName: 'Port',
+			name: 'port',
+			type: 'number',
+			default: 2883,
+			required: true,
+			description: 'OceanBase database port number',
 		},
 		{
 			displayName: 'Database',
 			name: 'database',
 			type: 'string',
-			default: 'test',
+			default: '',
+			required: true,
+			description: 'Name of the database to connect to',
 		},
 		{
 			displayName: 'User',
 			name: 'user',
 			type: 'string',
-			default: 'root@test',
+			default: '',
+			required: true,
+			description: 'Database username',
 		},
 		{
 			displayName: 'Password',
@@ -34,20 +56,22 @@ export class OceanBaseApi implements ICredentialType {
 				password: true,
 			},
 			default: '',
+			required: true,
+			description: 'Database password',
 		},
 		{
-			displayName: 'Port',
-			name: 'port',
-			type: 'number',
-			default: 2881,
+			displayName: 'SSL',
+			name: 'ssl',
+			type: 'boolean',
+			default: false,
+			description: 'Enable SSL connection',
 		},
 		{
-			displayName: 'Connect Timeout',
-			name: 'connectTimeout',
+			displayName: 'Connection Timeout',
+			name: 'connectionTimeout',
 			type: 'number',
 			default: 10000,
-			description:
-				'The milliseconds before a timeout occurs during the initial connection to the MySQL server',
+			description: 'Connection timeout in milliseconds',
 		},
-		];
+	];
 }

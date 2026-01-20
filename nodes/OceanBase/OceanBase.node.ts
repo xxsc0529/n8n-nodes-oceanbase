@@ -1,428 +1,422 @@
-import type mysql2 from 'mysql2/promise';
 import type {
 	ICredentialDataDecryptedObject,
-	ICredentialsDecrypted,
 	ICredentialTestFunctions,
 	IDataObject,
 	IExecuteFunctions,
-	INodeCredentialTestResult,
 	INodeExecutionData,
 	INodeType,
-	INodeTypeBaseDescription,
 	INodeTypeDescription,
 } from 'n8n-workflow';
-import {NodeOperationError } from 'n8n-workflow';
+import { NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
 
-import { createConnection, getResolvables, searchTables } from './GenericFunctions';
-
-const versionDescription: INodeTypeDescription = {
-	displayName: 'OceanBase',
-	name: 'oceanBase',
-	icon: 'file:oceanbase.svg',
-	group: ['input'],
-	version: 1,
-	description: 'Get, add and update data in OceanBase',
-	defaults: {
-		name: 'OceanBase',
-	},
-		inputs: ['main'],
-		outputs: ['main'],
-	credentials: [
-		{
-			name: 'oceanBaseApi',
-			required: true,
-			testedBy: 'oceanBaseConnectionTest',
-		},
-	],
-	properties: [
-		{
-			displayName: 'Operation',
-			name: 'operation',
-			type: 'options',
-			noDataExpression: true,
-			options: [
-				{
-					name: 'Execute Query',
-					value: 'executeQuery',
-					description: 'Execute an SQL query',
-					action: 'Execute a SQL query',
-				},
-				{
-					name: 'Insert',
-					value: 'insert',
-					description: 'Insert rows in database',
-					action: 'Insert rows in database',
-				},
-				{
-					name: 'Update',
-					value: 'update',
-					description: 'Update rows in database',
-					action: 'Update rows in database',
-				},
-			],
-			default: 'insert',
-		},
-
-		// ----------------------------------
-		//         executeQuery
-		// ----------------------------------
-		{
-			displayName: 'Query',
-			name: 'query',
-			type: 'string',
-			noDataExpression: true,
-			typeOptions: {
-				editor: 'sqlEditor',
-				sqlDialect: 'MySQL',
-			},
-			displayOptions: {
-				show: {
-					operation: ['executeQuery'],
-				},
-			},
-			default: '',
-			placeholder: 'SELECT id, name FROM product WHERE id < 40',
-			required: true,
-			description: 'The SQL query to execute',
-		},
-
-		// ----------------------------------
-		//         insert
-		// ----------------------------------
-		{
-			displayName: 'Table',
-			name: 'table',
-			type: 'resourceLocator',
-			default: { mode: 'list', value: '' },
-			required: true,
-			modes: [
-				{
-					displayName: 'From List',
-					name: 'list',
-					type: 'list',
-					placeholder: 'Select a Table...',
-					typeOptions: {
-						searchListMethod: 'searchTables',
-						searchFilterRequired: false,
-						searchable: true,
-					},
-				},
-				{
-					displayName: 'Name',
-					name: 'name',
-					type: 'string',
-					placeholder: 'table_name',
-				},
-			],
-			displayOptions: {
-				show: {
-					operation: ['insert'],
-				},
-			},
-			description: 'Name of the table in which to insert data to',
-		},
-		{
-			displayName: 'Columns',
-			name: 'columns',
-			type: 'string',
-			displayOptions: {
-				show: {
-					operation: ['insert'],
-				},
-			},
-			requiresDataPath: 'multiple',
-			default: '',
-			placeholder: 'id,name,description',
-			description:
-				'Comma-separated list of the properties which should used as columns for the new rows',
-		},
-		{
-			displayName: 'Options',
-			name: 'options',
-			type: 'collection',
-			displayOptions: {
-				show: {
-					operation: ['insert'],
-				},
-			},
-			default: {},
-			placeholder: 'Add modifiers',
-			description: 'Modifiers for INSERT statement',
-			options: [
-				{
-					displayName: 'Ignore',
-					name: 'ignore',
-					type: 'boolean',
-					default: true,
-					description:
-						'Whether to ignore any ignorable errors that occur while executing the INSERT statement',
-				},
-				{
-					displayName: 'Priority',
-					name: 'priority',
-					type: 'options',
-					options: [
-						{
-							name: 'Low Prioirity',
-							value: 'LOW_PRIORITY',
-							description:
-								'Delays execution of the INSERT until no other clients are reading from the table',
-						},
-						{
-							name: 'High Priority',
-							value: 'HIGH_PRIORITY',
-							description:
-								'Overrides the effect of the --low-priority-updates option if the server was started with that option. It also causes concurrent inserts not to be used.',
-						},
-					],
-					default: 'LOW_PRIORITY',
-					description:
-						'Ignore any ignorable errors that occur while executing the INSERT statement',
-				},
-			],
-		},
-
-		// ----------------------------------
-		//         update
-		// ----------------------------------
-		{
-			displayName: 'Table',
-			name: 'table',
-			type: 'resourceLocator',
-			default: { mode: 'list', value: '' },
-			required: true,
-			modes: [
-				{
-					displayName: 'From List',
-					name: 'list',
-					type: 'list',
-					placeholder: 'Select a Table...',
-					typeOptions: {
-						searchListMethod: 'searchTables',
-						searchFilterRequired: false,
-						searchable: true,
-					},
-				},
-				{
-					displayName: 'Name',
-					name: 'name',
-					type: 'string',
-					placeholder: 'table_name',
-				},
-			],
-			displayOptions: {
-				show: {
-					operation: ['update'],
-				},
-			},
-			description: 'Name of the table in which to update data in',
-		},
-		{
-			displayName: 'Update Key',
-			name: 'updateKey',
-			type: 'string',
-			displayOptions: {
-				show: {
-					operation: ['update'],
-				},
-			},
-			default: 'id',
-			required: true,
-			// eslint-disable-next-line n8n-nodes-base/node-param-description-miscased-id
-			description:
-				'Name of the property which decides which rows in the database should be updated. Normally that would be "id".',
-		},
-		{
-			displayName: 'Columns',
-			name: 'columns',
-			type: 'string',
-			requiresDataPath: 'multiple',
-			displayOptions: {
-				show: {
-					operation: ['update'],
-				},
-			},
-			default: '',
-			placeholder: 'name,description',
-			description:
-				'Comma-separated list of the properties which should used as columns for rows to update',
-		},
-	],
-};
+import mysql from 'mysql2/promise';
 
 export class OceanBase implements INodeType {
-	description: INodeTypeDescription;
-
-	constructor(baseDescription: INodeTypeBaseDescription) {
-		this.description = {
-			...baseDescription,
-			...versionDescription,
-		};
-	}
-
-	methods = {
-		credentialTest: {
-			async oceanBaseConnectionTest(
-				this: ICredentialTestFunctions,
-				credential: ICredentialsDecrypted,
-			): Promise<INodeCredentialTestResult> {
-				const credentials = credential.data as ICredentialDataDecryptedObject;
-				try {
-					const connection = await createConnection(credentials);
-					await connection.end();
-				} catch (error) {
-					return {
-						status: 'Error',
-						message: error.message,
-					};
-				}
-				return {
-					status: 'OK',
-					message: 'Connection successful!',
-				};
+	description: INodeTypeDescription = {
+		displayName: 'OceanBase',
+		name: 'oceanBase',
+		icon: 'file:oceanbase.svg',
+		group: ['input'],
+		version: 1,
+		description: 'Execute SQL queries in OceanBase database',
+		defaults: {
+			name: 'OceanBase',
+		},
+		inputs: [NodeConnectionTypes.Main],
+		outputs: [NodeConnectionTypes.Main],
+		usableAsTool: true,
+		credentials: [
+			{
+				name: 'oceanBaseApi',
+				required: true,
 			},
-		},
-		listSearch: {
-			searchTables,
-		},
+		],
+		properties: [
+			{
+				displayName: 'Operation',
+				name: 'operation',
+				type: 'options',
+				noDataExpression: true,
+				options: [
+					{
+						name: 'Execute Query',
+						value: 'executeQuery',
+						description: 'Execute a SQL query statement',
+						action: 'Execute query',
+					},
+					{
+						name: 'Insert',
+						value: 'insert',
+						description: 'Insert data',
+						action: 'Insert data',
+					},
+					{
+						name: 'Update',
+						value: 'update',
+						description: 'Update data',
+						action: 'Update data',
+					},
+					{
+						name: 'Delete',
+						value: 'delete',
+						description: 'Delete data',
+						action: 'Delete data',
+					},
+				],
+				default: 'executeQuery',
+			},
+			{
+				displayName: 'Query',
+				name: 'query',
+				type: 'string',
+				typeOptions: {
+					rows: 5,
+				},
+				displayOptions: {
+					show: {
+						operation: ['executeQuery'],
+					},
+				},
+				default: '',
+				placeholder: 'SELECT * FROM users WHERE id = ?',
+				required: true,
+				description: 'SQL query statement to execute',
+			},
+			{
+				displayName: 'Table',
+				name: 'table',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['insert', 'update', 'delete'],
+					},
+				},
+				default: '',
+				required: true,
+				description: 'Name of the table to operate on',
+			},
+			{
+				displayName: 'Columns',
+				name: 'columns',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['insert'],
+					},
+				},
+				default: '',
+				placeholder: 'id,name,email',
+				description: 'Column names to insert, separated by commas',
+			},
+			{
+				displayName: 'Values',
+				name: 'values',
+				type: 'string',
+				typeOptions: {
+					rows: 3,
+				},
+				displayOptions: {
+					show: {
+						operation: ['insert'],
+					},
+				},
+				default: '',
+				placeholder: '1,"John","john@example.com"',
+				description: 'Values to insert, separated by commas. Supports expressions.',
+			},
+			{
+				displayName: 'Update Key',
+				name: 'updateKey',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['update'],
+					},
+				},
+				default: '',
+				placeholder: 'ID',
+				description: 'Key name to find the record',
+			},
+			{
+				displayName: 'Update Value',
+				name: 'updateValue',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['update'],
+					},
+				},
+				default: '',
+				description: 'Key value to find the record',
+			},
+			{
+				displayName: 'Fields to Update',
+				name: 'fieldsToUpdate',
+				type: 'string',
+				typeOptions: {
+					rows: 3,
+				},
+				displayOptions: {
+					show: {
+						operation: ['update'],
+					},
+				},
+				default: '',
+				placeholder: 'name="John",email="john@example.com"',
+				description: 'Fields to update, format: field1=value1,field2=value2',
+			},
+			{
+				displayName: 'Delete Key',
+				name: 'deleteKey',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['delete'],
+					},
+				},
+				default: '',
+				placeholder: 'ID',
+				description: 'Key name to find the record to delete',
+			},
+			{
+				displayName: 'Delete Value',
+				name: 'deleteValue',
+				type: 'string',
+				displayOptions: {
+					show: {
+						operation: ['delete'],
+					},
+				},
+				default: '',
+				description: 'Key value to find the record to delete',
+			},
+			{
+				displayName: 'Options',
+				name: 'options',
+				type: 'collection',
+				placeholder: 'Add Option',
+				default: {},
+				options: [
+					{
+						displayName: 'Query Parameters',
+						name: 'queryParameters',
+						type: 'string',
+						default: '',
+						placeholder: 'param1,param2',
+						description: 'SQL query parameters, separated by commas. Use ? as placeholder in query.',
+					},
+					{
+						displayName: 'Return Fields',
+						name: 'returnFields',
+						type: 'string',
+						default: '*',
+						description: 'Fields to return, separated by commas. Default returns all fields.',
+					},
+				],
+			},
+		],
 	};
 
+	async credentialTest(
+		this: ICredentialTestFunctions,
+		credential: ICredentialDataDecryptedObject,
+	): Promise<INodeExecutionData[]> {
+		const credentials = credential as ICredentialDataDecryptedObject;
+
+		try {
+			const connection = await mysql.createConnection({
+				host: credentials.host as string,
+				port: credentials.port as number,
+				database: credentials.database as string,
+				user: credentials.user as string,
+				password: credentials.password as string,
+				ssl: credentials.ssl ? {} : undefined,
+				connectTimeout: credentials.connectionTimeout as number || 10000,
+			});
+
+			// Test connection by executing a simple query
+			await (connection as any).execute('SELECT 1');
+			await connection.end();
+
+			return [
+				{
+					json: {
+						success: true,
+						message: 'Connection successful',
+					},
+				},
+			];
+		} catch (error) {
+			return [
+				{
+					json: {
+						success: false,
+						message: error instanceof Error ? error.message : String(error),
+					},
+				},
+			];
+		}
+	}
+
 	async execute(this: IExecuteFunctions): Promise<INodeExecutionData[][]> {
-		const credentials = await this.getCredentials('oceanBaseApi');
-		const connection = await createConnection(credentials);
 		const items = this.getInputData();
-		const operation = this.getNodeParameter('operation', 0);
-		let returnItems: INodeExecutionData[] = [];
+		const operation = this.getNodeParameter('operation', 0) as string;
+		const credentials = (await this.getCredentials('oceanBaseApi')) as ICredentialDataDecryptedObject;
 
-		if (operation === 'executeQuery') {
-			// ----------------------------------
-			//         executeQuery
-			// ----------------------------------
+		// Create database connection
+		const connection = await mysql.createConnection({
+			host: credentials.host as string,
+			port: credentials.port as number,
+			database: credentials.database as string,
+			user: credentials.user as string,
+			password: credentials.password as string,
+			ssl: credentials.ssl ? {} : undefined,
+			connectTimeout: credentials.connectionTimeout as number || 10000,
+		});
 
-			try {
-				const queryQueue = items.map(async (_, index) => {
-					let rawQuery = (this.getNodeParameter('query', index) as string).trim();
+		const returnItems: INodeExecutionData[] = [];
 
-					for (const resolvable of getResolvables(rawQuery)) {
-						rawQuery = rawQuery.replace(
-							resolvable,
-							this.evaluateExpression(resolvable, index) as string,
-						);
+		try {
+			for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
+				try {
+					let result: unknown;
+					const options = this.getNodeParameter('options', itemIndex, {}) as {
+						queryParameters?: string;
+						returnFields?: string;
+					};
+
+					switch (operation) {
+						case 'executeQuery': {
+							const query = this.getNodeParameter('query', itemIndex, '') as string;
+							const queryParameters = options.queryParameters
+								? options.queryParameters.split(',').map((p) => p.trim())
+								: [];
+
+							// Replace expression values
+							const processedParams = queryParameters.map((param) => {
+								try {
+									return this.getNodeParameter(param, itemIndex) || param;
+								} catch {
+									return param;
+								}
+							});
+
+							[result] = await (connection as any).execute(query, processedParams);
+							break;
+						}
+
+						case 'insert': {
+							const table = this.getNodeParameter('table', itemIndex, '') as string;
+							const columns = this.getNodeParameter('columns', itemIndex, '') as string;
+							const values = this.getNodeParameter('values', itemIndex, '') as string;
+
+							const columnList = columns.split(',').map((c) => c.trim()).join(',');
+							const valueList = values.split(',').map((v) => v.trim());
+
+							// Process expressions
+							const processedValues = valueList.map((val) => {
+								try {
+									const resolved = this.getNodeParameter(val, itemIndex);
+									return resolved !== undefined ? resolved : val;
+								} catch {
+									return val;
+								}
+							});
+
+							const placeholders = processedValues.map(() => '?').join(',');
+							const query = `INSERT INTO ${table} (${columnList}) VALUES (${placeholders})`;
+
+							[result] = await (connection as any).execute(query, processedValues);
+							break;
+						}
+
+						case 'update': {
+							const table = this.getNodeParameter('table', itemIndex, '') as string;
+							const updateKey = this.getNodeParameter('updateKey', itemIndex, '') as string;
+							const updateValue = this.getNodeParameter('updateValue', itemIndex, '') as string;
+							const fieldsToUpdate = this.getNodeParameter('fieldsToUpdate', itemIndex, '') as string;
+
+							const updateFields = fieldsToUpdate.split(',').map((f) => {
+								const [key] = f.split('=').map((s) => s.trim());
+								return `${key} = ?`;
+							});
+
+							const updateValues = fieldsToUpdate.split(',').map((f) => {
+								const [, value] = f.split('=').map((s) => s.trim());
+								try {
+									const resolved = this.getNodeParameter(value, itemIndex);
+									return resolved !== undefined ? resolved : value.replace(/['"]/g, '');
+								} catch {
+									return value.replace(/['"]/g, '');
+								}
+							});
+
+							const query = `UPDATE ${table} SET ${updateFields.join(', ')} WHERE ${updateKey} = ?`;
+							const queryParams = [...updateValues, updateValue];
+
+							[result] = await (connection as any).execute(query, queryParams);
+							break;
+						}
+
+						case 'delete': {
+							const table = this.getNodeParameter('table', itemIndex, '') as string;
+							const deleteKey = this.getNodeParameter('deleteKey', itemIndex, '') as string;
+							const deleteValue = this.getNodeParameter('deleteValue', itemIndex, '') as string;
+
+							const query = `DELETE FROM ${table} WHERE ${deleteKey} = ?`;
+							[result] = await (connection as any).execute(query, [deleteValue]);
+							break;
+						}
+
+						default:
+							throw new NodeOperationError(this.getNode(), `Unknown operation: ${operation}`);
 					}
 
-					return await connection.query(rawQuery);
-				});
-
-				returnItems = ((await Promise.all(queryQueue)) as mysql2.OkPacket[][]).reduce(
-					(collection, result, index) => {
-						const [rows] = result;
-
-						const executionData = this.helpers.constructExecutionMetaData(
-							this.helpers.returnJsonArray(rows as unknown as IDataObject[]),
-							{ itemData: { item: index } },
-						);
-
-						collection = collection.concat(executionData);
-
-						return collection;
-					},
-					[] as INodeExecutionData[],
-				);
-			} catch (error) {
-				if (this.continueOnFail()) {
-					returnItems = this.helpers.returnJsonArray({ error: error.message });
-				} else {
-					await connection.end();
-					throw error;
+					// Process results
+					if (Array.isArray(result)) {
+						// SELECT query returns array
+						for (const row of result) {
+							returnItems.push({
+								json: row as IDataObject,
+								pairedItem: { item: itemIndex },
+							});
+						}
+					} else {
+						// INSERT/UPDATE/DELETE returns result object
+						const resultObj = result as {
+							affectedRows?: number;
+							insertId?: number | null;
+							[key: string]: unknown;
+						};
+						returnItems.push({
+							json: {
+								affectedRows: resultObj.affectedRows || 0,
+								insertId: resultObj.insertId || null,
+								...resultObj,
+							},
+							pairedItem: { item: itemIndex },
+						});
+					}
+				} catch (error) {
+					if (this.continueOnFail()) {
+						returnItems.push({
+							json: this.getInputData(itemIndex)[0].json,
+							error,
+							pairedItem: { item: itemIndex },
+						});
+					} else {
+						if (error instanceof Error && error.message) {
+							throw new NodeOperationError(this.getNode(), error, {
+								itemIndex,
+							});
+						}
+						throw error;
+					}
 				}
 			}
-		} else if (operation === 'insert') {
-			// ----------------------------------
-			//         insert
-			// ----------------------------------
-
-			try {
-				const table = this.getNodeParameter('table', 0, '', { extractValue: true }) as string;
-				const columnString = this.getNodeParameter('columns', 0) as string;
-				const columns = columnString.split(',').map((column) => column.trim());
-				const insertItems = this.helpers.copyInputItems(items, columns);
-				const insertPlaceholder = `(${columns.map((_column) => '?').join(',')})`;
-				const options = this.getNodeParameter('options', 0);
-				const insertIgnore = options.ignore as boolean;
-				const insertPriority = options.priority as string;
-
-				const insertSQL = `INSERT ${insertPriority || ''} ${
-					insertIgnore ? 'IGNORE' : ''
-				} INTO ${table}(${columnString}) VALUES ${items
-					.map((_item) => insertPlaceholder)
-					.join(',')};`;
-				const queryItems = insertItems.reduce(
-					(collection: IDataObject[], item) =>
-						collection.concat(Object.values(item) as IDataObject[]),
-					[],
-				);
-
-				const queryResult = await connection.query(insertSQL, queryItems);
-
-				returnItems = this.helpers.returnJsonArray(queryResult[0] as unknown as IDataObject);
-			} catch (error) {
-				if (this.continueOnFail()) {
-					returnItems = this.helpers.returnJsonArray({ error: error.message });
-				} else {
-					await connection.end();
-					throw error;
-				}
-			}
-		} else if (operation === 'update') {
-			// ----------------------------------
-			//         update
-			// ----------------------------------
-
-			try {
-				const table = this.getNodeParameter('table', 0, '', { extractValue: true }) as string;
-				const updateKey = this.getNodeParameter('updateKey', 0) as string;
-				const columnString = this.getNodeParameter('columns', 0) as string;
-				const columns = columnString.split(',').map((column) => column.trim());
-
-				if (!columns.includes(updateKey)) {
-					columns.unshift(updateKey);
-				}
-
-				const updateItems = this.helpers.copyInputItems(items, columns);
-				const updateSQL = `UPDATE ${table} SET ${columns
-					.map((column) => `${column} = ?`)
-					.join(',')} WHERE ${updateKey} = ?;`;
-				const queryQueue = updateItems.map(
-					async (item) =>
-						await connection.query(updateSQL, Object.values(item).concat(item[updateKey])),
-				);
-				const queryResult = await Promise.all(queryQueue);
-				returnItems = this.helpers.returnJsonArray(
-					queryResult.map((result) => result[0]) as unknown as IDataObject[],
-				);
-			} catch (error) {
-				if (this.continueOnFail()) {
-					returnItems = this.helpers.returnJsonArray({ error: error.message });
-				} else {
-					await connection.end();
-					throw error;
-				}
-			}
-		} else {
-			if (this.continueOnFail()) {
-				returnItems = this.helpers.returnJsonArray({
-					error: `The operation "${operation}" is not supported!`,
-				});
-			} else {
-				await connection.end();
-				throw new NodeOperationError(
-					this.getNode(),
-					`The operation "${operation}" is not supported!`,
-				);
-			}
+		} finally {
+			await connection.end();
 		}
-
-		await connection.end();
 
 		return [returnItems];
 	}

@@ -1,0 +1,19 @@
+{
+	"node": "n8n-nodes-oceanbase",
+	"nodeVersion": "1.0",
+	"codexVersion": "1.0",
+	"categories": ["Development", "Data"],
+	"resources": {
+		"credentialDocumentation": [
+			{
+				"url": "https://github.com/oceanbase/oceanbase"
+			}
+		],
+		"primaryDocumentation": [
+			{
+				"url": "https://github.com/oceanbase/oceanbase"
+			}
+		]
+	}
+}
+

@@ -1,56 +1,53 @@
 {
-  "name": "n8n-nodes-oceanbase",
-  "version": "0.1.2",
-  "description": "OceanBase - n8n integration node",
-  "keywords": [
-    "n8n-community-node-package",
-    "OceanBase"
-  ],
-  "license": "MIT",
-  "homepage": "https://github.com/xxsc0529/n8n-nodes-oceanbase.git",
-  "author": {
-    "name": "xxsc0529",
-    "email": "xxsc0529@163.com"
-  },
-  "repository": {
-    "type": "git",
-    "url": "https://github.com/xxsc0529/n8n-nodes-oceanbase.git"
-  },
-  "engines": {
-    "node": ">=20.15"
-  },
-  "main": "index.js",
-  "scripts": {
-    "build": "tsc && gulp build:icons",
-    "dev": "tsc --watch",
-    "format": "prettier nodes credentials --write",
-    "lint": "eslint nodes credentials package.json",
-    "lintfix": "eslint nodes credentials package.json --fix",
-    "prepublishOnly": "npm run build && npm run lint -c .eslintrc.prepublish.js nodes credentials package.json"
-  },
-  "files": [
-    "dist"
-  ],
-  "n8n": {
-    "n8nNodesApiVersion": 1,
-    "credentials": [
-      "dist/credentials/OceanBaseApi.credentials.js"
+    "name": "n8n-nodes-oceanbase",
+    "version": "0.1.0",
+    "description": "",
+    "license": "MIT",
+    "homepage": "",
+    "keywords": [
+        "n8n-community-node-package"
     ],
-    "nodes": [
-      "dist/nodes/OceanBase/OceanBase.node.js"
-    ]
-  },
-  "devDependencies": {
-    "@typescript-eslint/parser": "~8.32.0",
-    "eslint": "^8.57.0",
-    "eslint-plugin-n8n-nodes-base": "^1.16.3",
-    "gulp": "^5.0.0",
-    "prettier": "^3.5.3",
-    "typescript": "^5.8.2"
-  },
-  "peerDependencies": {
-    "n8n-workflow": "*",
-    "n8n-core": "*",
-    "mysql2": "3.14.1"
-  }
+    "author": {
+        "name": "xxsc0529",
+        "email": "xxsc0529@163.com"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/xxsc0529/n8n-nodes-oceanbase.git"
+    },
+   "scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"release": "n8n-node release",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+    "files": [
+        "dist"
+    ],
+    "n8n": {
+        "n8nNodesApiVersion": 1,
+        "strict": true,
+        "credentials": [
+            "dist/credentials/OceanBaseApi.credentials.js"
+        ],
+        "nodes": [
+            "dist/nodes/OceanBase/OceanBase.node.js"
+        ]
+    },
+    "dependencies": {
+        "mysql2": "^3.6.5"
+    },
+    "devDependencies": {
+        "@n8n/node-cli": "*",
+        "eslint": "9.32.0",
+        "prettier": "3.6.2",
+        "release-it": "^19.0.4",
+        "typescript": "5.9.2"
+    },
+    "peerDependencies": {
+        "n8n-workflow": "*"
+    }
 }
