@@ -62,13 +62,6 @@ export class OceanBaseApi implements ICredentialType {
 			description: 'Database password',
 		},
 		{
-			displayName: 'SSL',
-			name: 'ssl',
-			type: 'boolean',
-			default: false,
-			description: 'Enable SSL connection',
-		},
-		{
 			displayName: 'Connection Timeout',
 			name: 'connectionTimeout',
 			type: 'number',

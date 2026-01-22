@@ -240,7 +240,6 @@ export class OceanBase implements INodeType {
 				database: credentials.database as string,
 				user: credentials.user as string,
 				password: credentials.password as string,
-				ssl: credentials.ssl ? {} : undefined,
 				connectTimeout: credentials.connectionTimeout as number || 10000,
 			})) as unknown as ConnectionWithExecute;
 
@@ -280,7 +279,6 @@ export class OceanBase implements INodeType {
 			database: credentials.database as string,
 			user: credentials.user as string,
 			password: credentials.password as string,
-			ssl: credentials.ssl ? {} : undefined,
 			connectTimeout: credentials.connectionTimeout as number || 10000,
 		})) as unknown as ConnectionWithExecute;
 

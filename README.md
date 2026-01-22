@@ -31,7 +31,6 @@ To use this node, you need to configure OceanBase database connection credential
    - **Database**: Name of the database to connect to
    - **User**: Database username
    - **Password**: Database password
-   - **SSL**: Enable SSL connection (optional)
    - **Connection Timeout**: Connection timeout in milliseconds (default: 10000)
 
 ## Compatibility
