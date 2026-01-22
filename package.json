@@ -1,6 +1,6 @@
 {
     "name": "n8n-nodes-oceanbase",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "n8n community node for OceanBase database operations",
     "license": "MIT",
     "homepage": "",

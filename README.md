@@ -85,7 +85,7 @@ Delete data from a table:
 
 ## Version history
 
-### 0.1.0
+### 0.1.1
 
 - Initial version
 - Support for basic SQL query, insert, update, and delete operations
