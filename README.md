@@ -82,11 +82,3 @@ Delete data from a table:
 * [n8n community nodes documentation](https://docs.n8n.io/integrations/#community-nodes)
 * [OceanBase official documentation](https://github.com/oceanbase/oceanbase)
 * [OceanBase website](https://www.oceanbase.com/)
-
-## Version history
-
-### 0.1.1
-
-- Initial version
-- Support for basic SQL query, insert, update, and delete operations
-- Support for OceanBase database connection
